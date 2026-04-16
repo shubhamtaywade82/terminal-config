@@ -15,6 +15,10 @@
 #   --skip-claude        skip npm global @anthropic-ai/claude-code
 #   --skip-fzf-setup     skip writing ~/.fzf.zsh for Debian fzf paths
 #   --dotfiles-status    print whether common config files exist (no apt; no file changes except see fzf)
+#
+# Environment (optional):
+#   INSTALL_LINUX_APT_ATTEMPTS   max tries for core apt update+install (default: 3)
+#   INSTALL_LINUX_APT_RETRY_SLEEP seconds between tries (default: 8)
 
 set -euo pipefail
 
@@ -40,6 +44,10 @@ Options:
   --skip-fzf-setup     skip writing ~/.fzf.zsh for Debian/Ubuntu fzf paths
   --dotfiles-status    list common config paths + merge hints (no apt; no changes)
   -h, --help           show this help
+
+Environment:
+  INSTALL_LINUX_APT_ATTEMPTS     core apt retries (default: 3)
+  INSTALL_LINUX_APT_RETRY_SLEEP seconds between retries (default: 8)
 EOF
 }
 
@@ -251,19 +259,44 @@ if [[ "$(id -u)" -ne 0 ]]; then
   fi
 fi
 
+# Extra apt options: more HTTP retries + longer timeouts (helps flaky mirrors / WSL networking).
+APT_GET_OPTS=(
+  -o "Acquire::Retries=6"
+  -o "Acquire::http::Timeout=120"
+  -o "Acquire::https::Timeout=120"
+)
+
+_apt_get() {
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    run env DEBIAN_FRONTEND=noninteractive "$SUDO" apt-get "${APT_GET_OPTS[@]}" "$@"
+    return 0
+  fi
+  env DEBIAN_FRONTEND=noninteractive "$SUDO" apt-get "${APT_GET_OPTS[@]}" "$@"
+}
+
 apt_update() {
-  run env DEBIAN_FRONTEND=noninteractive "$SUDO" apt-get update -qq
+  _apt_get update -qq
 }
 
 apt_install() {
-  run env DEBIAN_FRONTEND=noninteractive "$SUDO" apt-get install -y "$@"
+  _apt_get install -y "$@"
+}
+
+apt_troubleshoot_hint() {
+  err "apt failed after retries. Common causes:"
+  err "  • Transient mirror/network errors — wait and re-run this script, or try: sudo apt-get clean && sudo apt-get update"
+  err "  • VPN / proxy / corporate firewall blocking archive.ubuntu.com or security.ubuntu.com"
+  err "  • Duplicate apt entries (e.g. W: Target Packages configured multiple times) — remove or comment the duplicate file in /etc/apt/sources.list.d/"
+  err "  • WSL: ensure Windows firewall allows outbound HTTP, or switch mirror in /etc/apt/sources.list"
 }
 
 apt_install_if_available() {
   local pkg
   for pkg in "$@"; do
     if apt-cache show "$pkg" >/dev/null 2>&1; then
-      apt_install "$pkg"
+      if ! apt_install "$pkg"; then
+        log "WARN: apt install failed for \`${pkg}\` — skipping this package (network or mirror issue)."
+      fi
     else
       log "    (apt skip: no package \`${pkg}\` in current apt sources)"
     fi
@@ -367,11 +400,40 @@ OPTIONAL_APT_PACKAGES=(
   atuin
 )
 
-log "==> apt-get update…"
-apt_update
+install_core_apt_with_retry() {
+  local max="${INSTALL_LINUX_APT_ATTEMPTS:-3}"
+  local delay="${INSTALL_LINUX_APT_RETRY_SLEEP:-8}"
+  local n=1
+  [[ "$max" -lt 1 ]] && max=1
 
-log "==> Installing core apt packages (${#CORE_APT_PACKAGES[@]})…"
-apt_install "${CORE_APT_PACKAGES[@]}"
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    log "==> apt-get update…"
+    apt_update
+    log "==> Installing core apt packages (${#CORE_APT_PACKAGES[@]})…"
+    apt_install "${CORE_APT_PACKAGES[@]}"
+    return 0
+  fi
+
+  while [[ "$n" -le "$max" ]]; do
+    log "==> apt-get update…"
+    if ! apt_update; then
+      log "WARN: apt-get update exited with an error; still attempting install…"
+    fi
+    log "==> Installing core apt packages (${#CORE_APT_PACKAGES[@]})…"
+    if apt_install "${CORE_APT_PACKAGES[@]}"; then
+      return 0
+    fi
+    if [[ "$n" -lt "$max" ]]; then
+      log "WARN: core apt install failed (attempt ${n} of ${max}); waiting ${delay}s before retry…"
+      sleep "$delay"
+    fi
+    n=$((n + 1))
+  done
+  apt_troubleshoot_hint
+  exit 1
+}
+
+install_core_apt_with_retry
 
 if [[ "$SKIP_OPTIONAL" -eq 0 ]]; then
   log "==> Installing optional apt packages (if published for this release)…"

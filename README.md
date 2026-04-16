@@ -12,6 +12,7 @@ Personal **terminal stack** for a fast **zsh** environment: prompt, smart histor
 | [modern-terminal-stack.md](./modern-terminal-stack.md) | Architecture, example `~/.zshrc` + Starship TOML, Cursor & Claude Code, merging with **existing** configs, checklists. |
 | [FEATURES_AND_USAGE.md](./FEATURES_AND_USAGE.md) | Feature list and **how to use** each tool on **macOS and Linux**. |
 | [install.sh](./install.sh) | **macOS only** — Homebrew installs, fzf integration script, optional global Claude Code (`npm`). |
+| [install-linux.sh](./install-linux.sh) | **Linux (Debian/Ubuntu/WSL)** — `apt` core packages, upstream installers where apt is thin, `~/.fzf.zsh` for distro fzf paths, optional global Claude Code (`npm`). |
 
 ---
 
@@ -42,16 +43,31 @@ Personal **terminal stack** for a fast **zsh** environment: prompt, smart histor
 
 ---
 
-## Linux
+## Quick start (Linux — Debian / Ubuntu / WSL)
 
-`install.sh` is **not** used on Linux. Install the same tools with your distro or [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux), then use the same shell hooks and usage notes in [FEATURES_AND_USAGE.md](./FEATURES_AND_USAGE.md).
+1. **Install packages** (review first if you like):
+
+   ```bash
+   chmod +x install-linux.sh   # once
+   ./install-linux.sh --dry-run
+   ./install-linux.sh
+   ```
+
+   Options match the mac script where it makes sense: `--skip-optional`, `--skip-claude`, `--skip-fzf-setup`, `--dotfiles-status`.
+
+2. **Wire up the shell** — Same as macOS: merge [modern-terminal-stack.md §3](./modern-terminal-stack.md) into `~/.zshrc`. Ensure **`~/.local/bin`** and **`~/.atuin/bin`** are on `PATH` if installers put binaries there.
+
+3. **Starship**, **Cursor**, **Check gaps** — Same steps as in [Quick start (macOS)](#quick-start-macos), using `./install-linux.sh --dotfiles-status` for the report.
+
+Other distros (Fedora, Arch) or [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux): install the same tools manually; see [FEATURES_AND_USAGE.md § Install the stack](./FEATURES_AND_USAGE.md#install-the-stack).
 
 ---
 
 ## Safety
 
 - `install.sh` does **not** edit `~/.zshrc`, Starship, Cursor JSON, or Atuin config; it installs Homebrew formulae, runs the **fzf** installer (writes **`~/.fzf.zsh`**), and optionally **`npm install -g @anthropic-ai/claude-code`**.
-- Re-running `./install.sh` is safe for already-installed Homebrew formulae; use `brew upgrade` when you want newer versions.
+- `install-linux.sh` does **not** edit `~/.zshrc`, Starship, Cursor JSON, or Atuin config; it runs **`apt-get`**, may run **upstream curl installers** (Starship, zoxide, Atuin), writes **`~/.fzf.zsh`** (unless `--skip-fzf-setup`), links **`~/.local/bin/bat`** / **`fd`** when the distro uses `batcat` / `fdfind`, and optionally **`npm install -g @anthropic-ai/claude-code`**.
+- Re-running `./install.sh` is safe for already-installed Homebrew formulae; use `brew upgrade` when you want newer versions. Re-running `./install-linux.sh` is safe for already-installed `apt` packages; use `apt upgrade` when you want newer versions.
 - Details: [modern-terminal-stack.md](./modern-terminal-stack.md) (install + existing-config sections).
 
 ---
@@ -60,4 +76,5 @@ Personal **terminal stack** for a fast **zsh** environment: prompt, smart histor
 
 - **macOS** for `install.sh`.
 - **Homebrew** on PATH for `install.sh`.
-- **Node / npm** on PATH if you want the script to install **Claude Code** (or use `--skip-claude`).
+- **Linux** with **`apt-get`** (Debian, Ubuntu, typical WSL images) for `install-linux.sh`; **`sudo`** for package installs (or run as root).
+- **Node / npm** on PATH if you want the installers to install **Claude Code** (or use `--skip-claude`).

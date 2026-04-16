@@ -5,6 +5,7 @@ This document lists what the **modern terminal stack** in this repo gives you, a
 | Scope | Notes |
 |--------|--------|
 | **`install.sh` in this repo** | **macOS only** (Homebrew). See [modern-terminal-stack.md](./modern-terminal-stack.md) for shell snippets and merge guidance. |
+| **`install-linux.sh` in this repo** | **Debian / Ubuntu / WSL** (`apt-get` + upstream installers for gaps). Same merge story for `~/.zshrc` and Starship. |
 | **Tools below** | Same CLIs on both platforms once installed; only **install paths** and **shell init** differ. |
 | **Shell** | Examples assume **zsh** (as in `modern-terminal-stack.md`). Most tools also support **bash** with their documented `init` lines. |
 
@@ -26,8 +27,8 @@ This document lists what the **modern terminal stack** in this repo gives you, a
 | **`git`** | Version control (works with any host: GitLab, Bitbucket, self-hosted, etc.). |
 | **Lazygit** *(optional)* | TUI for staging, commits, branches, and logs. |
 | **Neovim** *(optional)* | Modal editor in the terminal. |
-| **Claude Code** *(via script when `npm` exists)* | Anthropic terminal coding agent (`claude`). |
-| **Cursor** *(manual)* | Editor + **Cursor CLI** (`cursor`); not installed by `install.sh`. |
+| **Claude Code** *(via `install.sh` / `install-linux.sh` when `npm` exists)* | Anthropic terminal coding agent (`claude`). |
+| **Cursor** *(manual)* | Editor + **Cursor CLI** (`cursor`); not installed by the install scripts. |
 
 Ruby version managers (**rbenv**, **mise**, **asdf**) are **not** installed by this repo; you add them per machine.
 
@@ -47,7 +48,7 @@ Then merge hooks into `~/.zshrc` and add `~/.config/starship.toml` as described 
 
 ### Linux (equivalent packages)
 
-There is **no** `install.sh` for Linux here; use your distro (or **Linuxbrew**) to install the **same tool names** where available.
+**Debian / Ubuntu / WSL2:** use this repo’s **`./install-linux.sh`** (see [README.md](./README.md)); it automates `apt` plus common fallbacks. Manual `apt` examples below stay useful if you prefer hand-picking packages or are on a derivative.
 
 **Debian / Ubuntu** (examples — names vary by release; check `apt search`):
 
@@ -307,5 +308,4 @@ Then aliases (e.g. `ls` → `eza`) as in **modern-terminal-stack.md §3**.
 |------|------|
 | [modern-terminal-stack.md](./modern-terminal-stack.md) | Architecture, `.zshrc` / Starship examples, Cursor + Claude Code, existing-config merge guide. |
 | [install.sh](./install.sh) | **macOS** Homebrew + fzf integration + optional global Claude Code. |
-
-If you want a **Linux shell script** mirroring `install.sh` for apt/dnf/pacman, say which distro family you use first (names differ too much for one safe generic script without your target).
+| [install-linux.sh](./install-linux.sh) | **Debian/Ubuntu/WSL** `apt` + upstream installers + optional global Claude Code. |

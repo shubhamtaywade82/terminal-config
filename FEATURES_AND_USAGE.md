@@ -99,7 +99,7 @@ Usage is **identical** on macOS and Linux once the binary is on your `PATH` and 
 eval "$(starship init zsh)"
 ```
 
-**Config:** `~/.config/starship.toml` (same path on macOS and Linux).
+**Config:** `~/.config/starship.toml` (same path on macOS and Linux). All modules and options are documented here: [starship.rs/config](https://starship.rs/config/).
 
 **Try it:** open a new terminal; run `starship explain` to see which modules fired.
 

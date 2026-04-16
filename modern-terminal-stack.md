@@ -41,6 +41,8 @@ brew install lazygit neovim
 
 **One-shot install (this repo):** from the repo root, run `chmod +x install.sh && ./install.sh` (inspect with `./install.sh --dry-run` first). It installs the Homebrew formulae, runs the fzf installer, and installs Claude Code globally when `npm` is available. **Re-running is safe:** `brew install` leaves already-installed formulae alone (no failure); use `brew upgrade` when you want newer versions. It does **not** install the Cursor app or edit `~/.zshrc` / Starship / Cursor JSON—merge by hand or via a sourced snippet; see **§ Existing config files** and `./install.sh --dotfiles-status`.
 
+If **`brew update`** prints errors such as **Failed to download `formulae.brew.sh/api/formula.jws.json`**, that is usually **transient** (network, VPN, or CDN). The script continues with **`brew install`**; you can retry later or use **`./install.sh --skip-brew-update`** to skip the update step.
+
 After a normal install (or with `./install.sh --dotfiles-status` alone), the script prints **Still add manually**: a checklist of anything it **did not** configure (e.g. missing `~/.fzf.zsh`, hooks not found in `~/.zshrc`, no `starship.toml`, `cursor` / `claude` not on `PATH`, Ruby manager). Follow those lines and the doc; detection is best-effort (e.g. it looks for `starship init` / `zoxide init` / `atuin init` substrings in `~/.zshrc`).
 
 ---
@@ -199,6 +201,8 @@ That prints whether common paths exist and line counts (read-only). It does **no
 ---
 
 ## 4. Example Starship (`~/.config/starship.toml`)
+
+Put your config at **`~/.config/starship.toml`** (or set **`STARSHIP_CONFIG`** to another path—see §3b). **Full option and module reference:** [starship.rs/config](https://starship.rs/config/) (every `[module]` table, `format`, `right_format`, `command_timeout`, custom modules, etc.).
 
 Keep the prompt **cheap**: git + Ruby + optional Node/Docker only if you touch them daily.
 
